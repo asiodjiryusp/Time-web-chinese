@@ -31,7 +31,7 @@
   --indigo:#4338ca;
  
   /* fluid clock size: 320px on small phones → 470px on desktops */
-  --clock-size: clamp(260px, 52vmin, 470px);
+  --clock-size: clamp(220px, 40vmin, 400px);
 }
  
 html{
@@ -127,10 +127,10 @@ body.night .cloud{ opacity:0; }
   align-items:center;
   justify-content:flex-start;
   /* padding: top generous, sides fluid, bottom safe */
-  padding: clamp(10px,2vw,16px) clamp(10px,3vw,20px) clamp(20px,4vw,32px);
+  padding: clamp(8px,1.5vw,12px) clamp(8px,2.5vw,18px) clamp(12px,2vw,20px);
   position:relative;
   z-index:2;
-  gap: clamp(8px,1.5vw,12px);
+  gap: clamp(5px,1vw,9px);
 }
  
 /* =========================
@@ -222,7 +222,7 @@ body.night .celestial{
   align-items:center;
   justify-content:center;
   gap: clamp(10px,2vw,18px);
-  padding: clamp(10px,2vw,16px) clamp(14px,3vw,28px);
+  padding: clamp(8px,1.5vw,12px) clamp(12px,2.5vw,22px);
   border-radius:32px;
   background:rgba(255,255,255,.28);
   backdrop-filter:blur(18px);
@@ -272,7 +272,7 @@ body.night .header-card{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap: clamp(8px,1.5vw,12px);
+  gap: clamp(5px,1vw,9px);
 }
  
 /* =========================
@@ -385,13 +385,13 @@ body.night .header-card{
   display:grid;
   /* 2 columns as long as each is at least 200px wide */
   grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
-  gap: clamp(8px,2vw,14px);
+  gap: clamp(6px,1.5vw,11px);
 }
  
 .card{
   position:relative;
-  min-height: clamp(100px,14vw,132px);
-  padding: clamp(10px,2vw,16px);
+  min-height: clamp(82px,11vw,118px);
+  padding: clamp(8px,1.5vw,13px);
   border-radius:28px;
   background:rgba(255,255,255,.35);
   backdrop-filter:blur(18px);
@@ -429,7 +429,7 @@ body.night .card{
 .value{
   font-family:'Inter',sans-serif;
   /* clamp so big times never overflow a narrow card */
-  font-size: clamp(1.3rem,4vw,2.45rem);
+  font-size: clamp(1.1rem,3.2vw,2rem);
   font-weight:900;
   letter-spacing:1px;
   text-align:center;
@@ -459,9 +459,9 @@ body.night .indigo .sub{ color:#ddd6fe; }
 /* ── Chinese card: fix tag collision & line-wrap overlap ── */
 #cardChinese{
   /* push content below the absolute .tag (~32px tall + gap) */
-  padding-top: clamp(40px,6vw,52px);
+  padding-top: clamp(36px,5vw,46px);
   /* let card grow when text wraps to 2–3 lines */
-  min-height: clamp(115px,16vw,155px);
+  min-height: clamp(100px,13vw,138px);
   /* don't clip wrapped lines */
   overflow:visible;
 }
@@ -515,7 +515,7 @@ body.night .indigo .sub{ color:#ddd6fe; }
   background:rgba(255,255,255,.35);
   backdrop-filter:blur(18px);
   border-radius:28px;
-  padding: clamp(12px,2vw,18px) clamp(14px,3vw,22px);
+  padding: clamp(9px,1.5vw,14px) clamp(12px,2.5vw,20px);
   border:1px solid rgba(255,255,255,.45);
   box-shadow:0 10px 30px rgba(0,0,0,.12);
 }
@@ -680,6 +680,28 @@ input[type=range]::-moz-range-thumb{
   .grid{
     grid-template-columns:repeat(4,1fr); /* 4 col landscape */
   }
+}
+ 
+/* =========================
+   ONE-SCREEN FIT  (laptop / projector)
+   Use dvh so the whole app compresses to
+   exactly the viewport on tall screens.
+========================= */
+@media(min-width:769px) and (min-height:550px){
+  html, body { height:100%; overflow:hidden; }
+  #app {
+    height:100%;
+    overflow:hidden;
+    justify-content:center;
+  }
+  .main {
+    /* fill remaining space; items compress proportionally */
+    flex:1;
+    min-height:0;
+    justify-content:center;
+  }
+  /* prevent individual sections overflowing */
+  .clock-wrap, .grid, .slider-wrap, .buttons { flex-shrink:0; }
 }
 </style>
 </head>
@@ -950,26 +972,59 @@ function chinesePinyin(n){
  
 function chineseTime(h,m){
  
-  let prefix='';
+  /* ── Exact curriculum time periods ──────────────────────────
+     00:00        午夜  wǔyè        (midnight)
+     01:00-05:59  凌晨  língchén    (early pre-dawn)
+     06:00-09:00  早上  zǎoshang    (morning, 09:00 inclusive)
+     09:01-11:59  上午  shàngwǔ     (late morning)
+     12:00-12:59  中午  zhōngwǔ     (noon)
+     13:00-16:59  下午  xiàwǔ       (afternoon)
+     17:00-18:59  傍晚  bàngwǎn     (dusk / early evening)
+     19:00-23:59  晚上  wǎnshang    (night)
+  ─────────────────────────────────────────────────────────── */
  
-  if(h<12) prefix='上午';
-  else if(h<18) prefix='下午';
-  else prefix='晚上';
+  let prefix='', pinPfx='';
+  const totalMin = h * 60 + m;
  
-  let hh=h%12 || 12;
+  if(totalMin === 0){
+    prefix='午夜'; pinPfx='wǔ yè';
+  } else if(h>=1 && h<=5){
+    prefix='凌晨'; pinPfx='líng chén';
+  } else if(h===6 || h===7 || h===8 || (h===9 && m===0)){
+    prefix='早上'; pinPfx='zǎo shàng';
+  } else if((h===9 && m>=1) || h===10 || h===11){
+    prefix='上午'; pinPfx='shàng wǔ';
+  } else if(h===12){
+    prefix='中午'; pinPfx='zhōng wǔ';
+  } else if(h>=13 && h<=16){
+    prefix='下午'; pinPfx='xià wǔ';
+  } else if(h===17 || h===18){
+    prefix='傍晚'; pinPfx='bàng wǎn';
+  } else {
+    prefix='晚上'; pinPfx='wǎn shàng';
+  }
  
-  const hText = hh===2 ? '两' : chineseNumber(hh);
-  const hPin  = hh===2 ? 'liǎng' : chinesePinyin(hh);
+  /* 12-hour numeral; 两 replaces 二 for "2 o'clock" */
+  const hh12 = h % 12 || 12;
+  const hText = hh12 === 2 ? '两' : chineseNumber(hh12);
+  const hPin  = hh12 === 2 ? 'liǎng' : chinesePinyin(hh12);
  
-  const text =
-    `${prefix}${hText}点${m===0?'':chineseNumber(m)+'分'}`;
+  /* Minutes: 零X for single-digit, 整 for on-the-hour */
+  let mText='', mPin='';
+  if(m===0){
+    mText='整'; mPin='zhěng';
+  } else if(m<10){
+    mText='零'+chineseNumber(m)+'分';
+    mPin ='líng '+chinesePinyin(m)+' fēn';
+  } else {
+    mText=chineseNumber(m)+'分';
+    mPin =chinesePinyin(m)+' fēn';
+  }
  
-  const pinyin =
-    `${h<12?'shàng wǔ':h<18?'xià wǔ':'wǎn shàng'} `
-    +`${hPin} diǎn `
-    +(m===0?'':chinesePinyin(m)+' fēn');
+  const text   = `${prefix}${hText}点${mText}`;
+  const pinyin = `${pinPfx} ${hPin} diǎn ${mPin}`;
  
-  return {text,pinyin};
+  return {text, pinyin};
 }
  
 /* SLIDER */
@@ -1138,4 +1193,3 @@ render();
  
 </body>
 </html>
- 
