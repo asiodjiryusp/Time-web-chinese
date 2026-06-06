@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Captain Chote Chinese Teacher</title>
+ 
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+ 
+<style>
+ 
+.dev-credit{
+  margin-top:8px;
+  font-size:.82rem;
+  font-weight:700;
+  letter-spacing:.4px;
+  color:rgba(255,255,255,.88);
+  text-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+ 
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+ 
+:root{
+  --red:#dc2626;
+  --blue:#2563eb;
+  --purple:#7c3aed;
+  --indigo:#4338ca;
+ 
+  /* fluid clock size: 320px on small phones → 470px on desktops */
+  --clock-size: clamp(220px, 40vmin, 400px);
+}
+ 
+html{
+  width:100%;
+  height:100%;
+}
+ 
+/* Allow body to scroll on short screens; keep overflow-x hidden */
+body{
+  width:100%;
+  min-height:100%;
+  overflow-x:hidden;
+  overflow-y:auto;
+  font-family:'Prompt',sans-serif;
+  transition:background 1s ease;
+  color:#111827;
+}
+ 
+body.day{
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.5), transparent 30%),
+    linear-gradient(160deg,#9ad8ff 0%,#c5ecff 40%,#dfffe7 100%);
+}
+ 
+body.night{
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.08), transparent 25%),
+    linear-gradient(160deg,#050816 0%,#11193a 50%,#1a0f3f 100%);
+}
+ 
+/* =========================
+   AMBIENT EFFECTS
+========================= */
+ 
+#ambient{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:0;
+}
+ 
+.star{
+  position:absolute;
+  border-radius:50%;
+  background:white;
+  opacity:0;
+  animation:twinkle 2.5s infinite alternate;
+  transition:opacity 1s ease;
+}
+ 
+body.night .star{ opacity:1; }
+ 
+@keyframes twinkle{
+  from{ transform:scale(.7); opacity:.25; }
+  to{   transform:scale(1.4); opacity:1;  }
+}
+ 
+.cloud{
+  position:absolute;
+  background:rgba(255,255,255,.82);
+  border-radius:999px;
+  filter:blur(.3px);
+  animation:cloudMove linear infinite;
+  transition:opacity 1s ease;
+}
+ 
+body.night .cloud{ opacity:0; }
+ 
+.cloud::before,.cloud::after{
+  content:'';
+  position:absolute;
+  background:inherit;
+  border-radius:50%;
+}
+.cloud::before{ width:55%; height:140%; left:10%;  top:-70%; }
+.cloud::after { width:40%; height:110%; right:12%; top:-45%; }
+ 
+@keyframes cloudMove{
+  from{ transform:translateX(-250px); }
+  to{   transform:translateX(120vw);  }
+}
+ 
+/* =========================
+   APP SHELL
+========================= */
+ 
+#app{
+  width:100%;
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  /* padding: top generous, sides fluid, bottom safe */
+  padding: clamp(8px,1.5vw,12px) clamp(8px,2.5vw,18px) clamp(12px,2vw,20px);
+  position:relative;
+  z-index:2;
+  gap: clamp(5px,1vw,9px);
+}
+ 
+/* =========================
+   CELESTIAL  (sun / moon)
+========================= */
+ 
+.celestial{
+  position:fixed;
+  top:14px;
+  right:14px;
+ 
+  width: clamp(64px,9vw,92px);
+  height:clamp(64px,9vw,92px);
+ 
+  border-radius:28px;
+ 
+  display:flex;
+  align-items:center;
+  justify-content:center;
+ 
+  background:rgba(255,255,255,.22);
+  backdrop-filter:blur(18px);
+ 
+  border:1px solid rgba(255,255,255,.35);
+ 
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.15),
+    inset 0 1px 0 rgba(255,255,255,.25);
+ 
+  z-index:20;
+  transition:all .8s ease;
+}
+ 
+body.night .celestial{
+  background:rgba(15,20,40,.5);
+  border-color:rgba(255,255,255,.1);
+}
+ 
+.celestial-icon{
+  position:relative;
+  width: clamp(38px,6vw,54px);
+  height:clamp(38px,6vw,54px);
+  animation:pulse 4s infinite ease-in-out;
+}
+ 
+.sun{
+  width:100%; height:100%; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff7b2,#ffc107);
+  box-shadow:0 0 20px rgba(255,193,7,.8),0 0 50px rgba(255,193,7,.45);
+  position:relative;
+}
+.sun::before{
+  content:''; position:absolute; inset:-12px; border-radius:50%;
+  border:4px dashed rgba(255,210,0,.7);
+  animation:spin 18s linear infinite;
+}
+ 
+.moon{
+  width:100%; height:100%; border-radius:50%;
+  background:#f4f4ff; position:relative;
+  box-shadow:0 0 22px rgba(255,255,255,.75),0 0 55px rgba(180,190,255,.35);
+}
+.moon::after{
+  content:''; position:absolute;
+  width:44%; height:44%;
+  border-radius:50%;
+  background:#1a0f3f;
+  top:10%; left:30%;
+}
+ 
+/* =========================
+   HEADER
+========================= */
+ 
+.header{
+  width:100%;
+  max-width:980px;
+  display:flex;
+  justify-content:center;
+  position:relative;
+  z-index:5;
+  /* leave room for the fixed celestial widget */
+  padding-right: clamp(74px,12vw,108px);
+}
+ 
+.header-card{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: clamp(10px,2vw,18px);
+  padding: clamp(8px,1.5vw,12px) clamp(12px,2.5vw,22px);
+  border-radius:32px;
+  background:rgba(255,255,255,.28);
+  backdrop-filter:blur(18px);
+  border:1.5px solid rgba(255,255,255,.45);
+  box-shadow:0 10px 40px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:all .5s ease;
+}
+ 
+body.night .header-card{
+  background:rgba(15,20,40,.45);
+  border:1px solid rgba(255,255,255,.12);
+}
+ 
+.header-avatar{
+  width: clamp(44px,8vw,72px);
+  height:clamp(44px,8vw,72px);
+  border-radius:50%;
+  overflow:hidden;
+  flex-shrink:0;
+  border:4px solid rgba(255,255,255,.9);
+  box-shadow:0 0 25px rgba(255,255,255,.5);
+}
+.header-avatar img{ width:100%; height:100%; object-fit:cover; }
+ 
+.header-title{
+  font-size: clamp(1.1rem,3.5vw,2rem);
+  font-weight:900;
+  color:white;
+  line-height:1.15;
+  text-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+ 
+.header-sub{
+  margin-top:4px;
+  color:rgba(255,255,255,.95);
+  font-size: clamp(.7rem,1.8vw,.92rem);
+  font-weight:600;
+}
+ 
+/* =========================
+   MAIN
+========================= */
+ 
+.main{
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: clamp(5px,1vw,9px);
+}
+ 
+/* =========================
+   CLOCK
+========================= */
+ 
+.clock-wrap{
+  width: var(--clock-size);
+  height:var(--clock-size);
+  border-radius:50%;
+  position:relative;
+  flex-shrink:0;
+ 
+  background:radial-gradient(circle at 30% 30%,#ffce67,#b45309);
+ 
+  box-shadow:
+    0 30px 60px rgba(0,0,0,.22),
+    0 0 0 clamp(6px,1.5vw,14px) rgba(255,255,255,.15),
+    inset 0 0 20px rgba(255,255,255,.15);
+ 
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+ 
+.clock-face{
+  width:91%;
+  height:91%;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#fffdf2,#f7edd2);
+  position:relative;
+  box-shadow:inset 0 4px 18px rgba(0,0,0,.08);
+}
+ 
+/* Numbers scale with the clock */
+.number{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Inter',sans-serif;
+  font-weight:900;
+  /* fluid: ~0.75rem on 260px clock → 1.55rem on 470px clock */
+  font-size: clamp(.72rem, 3.3vmin, 1.55rem);
+  color:#78350f;
+}
+ 
+/* =========================
+   HANDS
+========================= */
+ 
+.hand{
+  position:absolute;
+  left:50%;
+  bottom:50%;
+  transform-origin:50% 100%;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  cursor:grab;
+}
+.hand:active{ cursor:grabbing; }
+ 
+/* Heights use % of clock-face so they auto-scale */
+.hour{
+  width: clamp(10px,3.5vmin,16px);
+  height:30%;
+  margin-left:calc(clamp(10px,3.5vmin,16px) / -2);
+  z-index:4;
+}
+.hour .bar{
+  width:100%; height:100%;
+  background:linear-gradient(to top,#dc2626,#ff5c5c);
+  border-radius:12px;
+  box-shadow:0 0 14px rgba(220,38,38,.5);
+}
+ 
+.minute{
+  width: clamp(7px,2.5vmin,11px);
+  height:41%;
+  margin-left:calc(clamp(7px,2.5vmin,11px) / -2);
+  z-index:3;
+}
+.minute .bar{
+  width:100%; height:100%;
+  background:linear-gradient(to top,#2563eb,#60a5fa);
+  border-radius:12px;
+  box-shadow:0 0 14px rgba(37,99,235,.5);
+}
+ 
+.center-cap{
+  width: clamp(16px,4vmin,28px);
+  height:clamp(16px,4vmin,28px);
+  border-radius:50%;
+  background:#f59e0b;
+  border: clamp(2px,0.5vmin,4px) solid #92400e;
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  z-index:10;
+}
+ 
+/* =========================
+   GRID
+========================= */
+ 
+.grid{
+  width:100%;
+  max-width:980px;
+  display:grid;
+  /* 2 columns as long as each is at least 200px wide */
+  grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+  gap: clamp(6px,1.5vw,11px);
+}
+ 
+.card{
+  position:relative;
+  min-height: clamp(82px,11vw,118px);
+  padding: clamp(8px,1.5vw,13px);
+  border-radius:28px;
+  background:rgba(255,255,255,.35);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow:0 12px 35px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.3);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  transition:all .4s ease;
+}
+ 
+body.night .card{
+  background:rgba(20,25,45,.48);
+  border-color:rgba(255,255,255,.08);
+}
+ 
+.tag{
+  position:absolute;
+  top:10px;
+  left:10px;
+  padding:4px 11px;
+  border-radius:999px;
+  font-size: clamp(.62rem,1.4vw,.75rem);
+  font-weight:800;
+  color:white;
+}
+ 
+.red   .tag{ background:#dc2626; }
+.blue  .tag{ background:#2563eb; }
+.purple .tag{ background:#7c3aed; }
+.indigo .tag{ background:#4338ca; }
+ 
+.value{
+  font-family:'Inter',sans-serif;
+  /* clamp so big times never overflow a narrow card */
+  font-size: clamp(1.1rem,3.2vw,2rem);
+  font-weight:900;
+  letter-spacing:1px;
+  text-align:center;
+  word-break:break-word;
+  line-height:1.45;
+}
+ 
+.red    .value{ color:var(--red);    }
+.blue   .value{ color:var(--blue);   }
+.purple .value{ color:var(--purple); }
+.indigo .value{ color:var(--indigo); }
+ 
+body.night .red    .value{ color:#ff7a7a; }
+body.night .blue   .value{ color:#7cb5ff; }
+body.night .purple .value{ color:#d0a7ff; }
+body.night .indigo .value{ color:#b9b5ff; }
+ 
+.sub{
+  margin-top:5px;
+  font-size: clamp(.72rem,1.8vw,.95rem);
+  font-weight:700;
+  text-align:center;
+}
+.indigo .sub{ color:#5b21b6; }
+body.night .indigo .sub{ color:#ddd6fe; }
+ 
+/* ── Chinese card: fix tag collision & line-wrap overlap ── */
+#cardChinese{
+  /* push content below the absolute .tag (~32px tall + gap) */
+  padding-top: clamp(36px,5vw,46px);
+  /* let card grow when text wraps to 2–3 lines */
+  min-height: clamp(100px,13vw,138px);
+  /* don't clip wrapped lines */
+  overflow:visible;
+}
+ 
+#cnText{
+  /* slightly smaller ceiling so long strings wrap gracefully */
+  font-size: clamp(1rem,3.2vw,1.55rem) !important;
+  /* generous line-height so wrapped CJK lines don't collide */
+  line-height:1.6 !important;
+  text-align:center;
+  overflow-wrap:break-word;
+  width:100%;
+}
+ 
+#pinyin{
+  line-height:1.55;
+  text-align:center;
+  font-size: clamp(.62rem,1.5vw,.88rem);
+  margin-top:5px;
+  width:100%;
+  word-break:break-word;
+}
+ 
+/* QUIZ hidden state */
+.hidden-answer .value,
+.hidden-answer .sub{ opacity:0; }
+ 
+.quiz-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: clamp(1.3rem,3vw,2rem);
+  font-weight:900;
+  color:#6b7280;
+  transition:.4s;
+}
+.card:not(.hidden-answer) .quiz-placeholder{
+  opacity:0;
+  pointer-events:none;
+}
+ 
+/* =========================
+   SLIDER
+========================= */
+ 
+.slider-wrap{
+  width:100%;
+  max-width:980px;
+  background:rgba(255,255,255,.35);
+  backdrop-filter:blur(18px);
+  border-radius:28px;
+  padding: clamp(9px,1.5vw,14px) clamp(12px,2.5vw,20px);
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+ 
+body.night .slider-wrap{
+  background:rgba(20,25,45,.48);
+}
+ 
+.slider-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+ 
+.slider-title{
+  font-weight:700;
+  font-size: clamp(.82rem,2vw,1rem);
+  color:#4b5563;
+}
+body.night .slider-title{ color:#e5e7eb; }
+ 
+.slider-time{
+  font-family:'Inter',sans-serif;
+  font-weight:900;
+  font-size: clamp(.95rem,2.5vw,1.2rem);
+  color:#7c3aed;
+}
+ 
+input[type=range]{
+  width:100%;
+  appearance:none;
+  height: clamp(8px,1.5vw,12px);
+  border-radius:999px;
+  background:rgba(124,58,237,.2);
+}
+ 
+input[type=range]::-webkit-slider-thumb{
+  appearance:none;
+  width: clamp(22px,4vw,30px);
+  height:clamp(22px,4vw,30px);
+  border-radius:50%;
+  background:#7c3aed;
+  border:4px solid white;
+  cursor:pointer;
+  box-shadow:0 5px 18px rgba(124,58,237,.45);
+}
+ 
+input[type=range]::-moz-range-thumb{
+  width: clamp(22px,4vw,30px);
+  height:clamp(22px,4vw,30px);
+  border-radius:50%;
+  background:#7c3aed;
+  border:4px solid white;
+  cursor:pointer;
+  box-shadow:0 5px 18px rgba(124,58,237,.45);
+}
+ 
+/* =========================
+   BUTTONS
+========================= */
+ 
+.buttons{
+  display:flex;
+  flex-wrap:wrap;           /* wrap onto a second row on tiny screens */
+  justify-content:center;
+  gap: clamp(8px,2vw,14px);
+  width:100%;
+  max-width:980px;
+}
+ 
+.btn{
+  border:none;
+  border-radius:22px;
+  padding: clamp(10px,1.8vw,14px) clamp(16px,3vw,26px);
+  font-family:'Prompt',sans-serif;
+  font-weight:800;
+  font-size: clamp(.82rem,2vw,1rem);
+  color:white;
+  cursor:pointer;
+  transition:.25s;
+  white-space:nowrap;
+}
+.btn:hover{ transform:translateY(-2px); }
+ 
+.random{ background:linear-gradient(135deg,#f97316,#ea580c); }
+.reveal{ background:linear-gradient(135deg,#8b5cf6,#6d28d9); }
+.reset { background:linear-gradient(135deg,#10b981,#059669); }
+ 
+/* =========================
+   ANIMATIONS
+========================= */
+ 
+@keyframes pulse{
+  0%,100%{ transform:scale(1);    }
+  50%     { transform:scale(1.06); }
+}
+ 
+@keyframes spin{
+  from{ transform:rotate(0deg);   }
+  to  { transform:rotate(360deg); }
+}
+ 
+/* =========================
+   RESPONSIVE BREAKPOINTS
+   (fine-tuning on top of the
+    fluid clamp() defaults above)
+========================= */
+ 
+/* ── Tablet portrait  ≤ 768px ── */
+@media(max-width:768px){
+ 
+  .header{ padding-right:0; }   /* celestial is fixed, no need to indent */
+ 
+  .header-title{ font-size:clamp(1rem,4vw,1.5rem); }
+ 
+  /* Force 2-col grid to collapse to 1 col below 520px */
+  /* (auto-fit with minmax(200px,1fr) handles this automatically) */
+}
+ 
+/* ── Mobile  ≤ 480px ── */
+@media(max-width:480px){
+ 
+  /* The fixed celestial widget overlaps less on phones */
+  .celestial{
+    width:52px;
+    height:52px;
+    border-radius:18px;
+    top:10px;
+    right:10px;
+  }
+  .celestial-icon{
+    width:32px;
+    height:32px;
+  }
+ 
+  /* Collapse grid to single column explicitly */
+  .grid{
+    grid-template-columns:1fr;
+  }
+ 
+  /* Cards: trim height so 4 stack don't overflow too badly */
+  .card{
+    min-height:88px;
+  }
+ 
+  /* Shrink moon pseudo so it doesn't bleed on small icon */
+  .moon::after{
+    width:38%;
+    height:38%;
+    top:8%;
+    left:28%;
+  }
+}
+ 
+/* ── Very short landscape phones ── */
+@media(max-height:500px) and (orientation:landscape){
+  /* Let body scroll freely; shrink clock more aggressively */
+  :root{
+    --clock-size: clamp(180px,38vmin,300px);
+  }
+  .grid{
+    grid-template-columns:repeat(4,1fr); /* 4 col landscape */
+  }
+}
+ 
+/* =========================
+   ONE-SCREEN FIT  (laptop / projector)
+   Use dvh so the whole app compresses to
+   exactly the viewport on tall screens.
+========================= */
+@media(min-width:769px) and (min-height:550px){
+  html, body { height:100%; overflow:hidden; }
+  #app {
+    height:100%;
+    overflow:hidden;
+    justify-content:center;
+  }
+  .main {
+    /* fill remaining space; items compress proportionally */
+    flex:1;
+    min-height:0;
+    justify-content:center;
+  }
+  /* prevent individual sections overflowing */
+  .clock-wrap, .grid, .slider-wrap, .buttons { flex-shrink:0; }
+}
+</style>
+</head>
+ 
+<body class="day">
+ 
+<div id="ambient"></div>
+ 
+<div id="app">
+ 
+  <!-- SUN / MOON -->
+  <div class="celestial">
+    <div class="celestial-icon" id="celestialIcon"></div>
+  </div>
+ 
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-card">
+ 
+      <div class="header-avatar">
+        <img src="tpic.jpg" />
+      </div>
+ 
+      <div class="header-text">
+        <div class="header-title">
+          ⏰ Captain Chote Chinese Teacher
+        </div>
+ 
+        <div class="header-sub">
+          Learn Time • ภาษาไทย • 中文 • 学时间
+        </div>
+            <div class="dev-credit">
+            Developed by Katsu :) 
+            </div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- MAIN -->
+  <div class="main">
+ 
+    <!-- CLOCK -->
+    <div class="clock-wrap">
+ 
+      <div class="clock-face" id="clockFace">
+ 
+        <script>
+          for(let i=1;i<=12;i++){
+            const angle=(i*30-90)*Math.PI/180;
+            const x=50+40*Math.cos(angle);
+            const y=50+40*Math.sin(angle);
+ 
+            document.write(`
+              <div class="number"
+              style="left:${x}%;top:${y}%;">
+              ${i}
+              </div>
+            `);
+          }
+        </script>
+ 
+        <div class="hand hour" id="hourHand">
+          <div class="bar"></div>
+        </div>
+ 
+        <div class="hand minute" id="minuteHand">
+          <div class="bar"></div>
+        </div>
+ 
+        <div class="center-cap"></div>
+ 
+      </div>
+ 
+    </div>
+ 
+    <!-- GRID -->
+    <div class="grid">
+ 
+      <div class="card red" id="card24">
+        <div class="tag">24 HOURS</div>
+        <div class="value" id="time24">12:00</div>
+        <div class="quiz-placeholder">?</div>
+      </div>
+ 
+      <div class="card blue" id="card12">
+        <div class="tag">AM / PM</div>
+        <div class="value" id="time12">12:00 PM</div>
+        <div class="quiz-placeholder">?</div>
+      </div>
+ 
+      <div class="card purple" id="cardThai">
+        <div class="tag">ภาษาไทย</div>
+        <div class="value" id="thaiText" style="font-size:1.55rem;text-align:center;">
+          เที่ยงตรง
+        </div>
+        <div class="quiz-placeholder">รอเฉลย...</div>
+      </div>
+ 
+      <div class="card indigo" id="cardChinese">
+        <div class="tag">中文 Chinese</div>
+ 
+        <div class="value" id="cnText"
+        style="font-size:1.6rem;text-align:center;">
+          十二点
+        </div>
+ 
+        <div class="sub" id="pinyin">
+          shí èr diǎn
+        </div>
+ 
+        <div class="quiz-placeholder">等待答案...</div>
+      </div>
+ 
+    </div>
+ 
+    <!-- SLIDER -->
+    <div class="slider-wrap">
+ 
+      <div class="slider-head">
+        <div class="slider-title">
+          🎛️ Time Slider
+        </div>
+ 
+        <div class="slider-time" id="sliderLabel">
+          12:00
+        </div>
+      </div>
+ 
+      <input type="range" min="0" max="1439" value="720" id="slider"/>
+ 
+    </div>
+ 
+    <!-- BUTTONS -->
+    <div class="buttons">
+ 
+      <button class="btn random" onclick="randomQuiz()">
+        🎲 Random Quiz
+      </button>
+ 
+      <button class="btn reveal" onclick="revealQuiz()">
+        👁 Reveal
+      </button>
+ 
+      <button class="btn reset" onclick="resetClock()">
+        🔄 Reset
+      </button>
+ 
+    </div>
+ 
+  </div>
+</div>
+ 
+<script>
+let H = 12;
+let M = 0;
+let dragging = null;
+let quizMode = false;
+ 
+const hourHand = document.getElementById('hourHand');
+const minuteHand = document.getElementById('minuteHand');
+const slider = document.getElementById('slider');
+const sliderLabel = document.getElementById('sliderLabel');
+ 
+const card24 = document.getElementById('card24');
+const card12 = document.getElementById('card12');
+const cardThai = document.getElementById('cardThai');
+const cardChinese = document.getElementById('cardChinese');
+ 
+const cards=[card24,card12,cardThai,cardChinese];
+ 
+function render(){
+ 
+  const hDeg=((H%12)*30)+(M*0.5);
+  const mDeg=M*6;
+ 
+  hourHand.style.transform=`rotate(${hDeg}deg)`;
+  minuteHand.style.transform=`rotate(${mDeg}deg)`;
+ 
+  const hh=String(H).padStart(2,'0');
+  const mm=String(M).padStart(2,'0');
+ 
+  document.getElementById('time24').innerText=`${hh}:${mm}`;
+ 
+  const ap = H<12 ? 'AM' : 'PM';
+  const h12 = H%12 || 12;
+ 
+  document.getElementById('time12').innerText=
+    `${h12}:${mm} ${ap}`;
+ 
+  document.getElementById('thaiText').innerText=
+    thaiTime(H,M);
+ 
+  const cn=chineseTime(H,M);
+ 
+  document.getElementById('cnText').innerText=cn.text;
+  document.getElementById('pinyin').innerText=cn.pinyin;
+ 
+  slider.value=H*60+M;
+  sliderLabel.innerText=`${hh}:${mm}`;
+ 
+  updateTheme();
+}
+ 
+function updateTheme(){
+ 
+  const isDay = H>=6 && H<=18;
+ 
+  document.body.className=isDay?'day':'night';
+ 
+  const celestial=document.getElementById('celestialIcon');
+ 
+  celestial.innerHTML=isDay
+    ? `<div class="sun"></div>`
+    : `<div class="moon"></div>`;
+}
+ 
+/* THAI */
+ 
+function thaiTime(h,m){
+ 
+  if(m===0){
+ 
+    if(h===0) return 'เที่ยงคืน';
+    if(h===12) return 'เที่ยงตรง';
+ 
+    return `${h} นาฬิกา ตรง`;
+  }
+ 
+  return `${h} นาฬิกา ${m} นาที`;
+}
+ 
+/* CHINESE */
+ 
+function chineseNumber(n){
+ 
+  const nums=['零','一','二','三','四','五','六','七','八','九'];
+ 
+  if(n<10) return nums[n];
+ 
+  if(n===10) return '十';
+ 
+  if(n<20) return '十'+nums[n-10];
+ 
+  const tens=Math.floor(n/10);
+  const ones=n%10;
+ 
+  return nums[tens]+'十'+(ones?nums[ones]:'');
+}
+ 
+function chinesePinyin(n){
+ 
+  const p=['líng','yī','èr','sān','sì','wǔ','liù','qī','bā','jiǔ'];
+ 
+  if(n<10) return p[n];
+ 
+  if(n===10) return 'shí';
+ 
+  if(n<20) return 'shí '+p[n-10];
+ 
+  const tens=Math.floor(n/10);
+  const ones=n%10;
+ 
+  const t=p[tens]+' shí';
+ 
+  return ones ? t+' '+p[ones] : t;
+}
+ 
+function chineseTime(h,m){
+ 
+  /* ── Exact curriculum time periods ──────────────────────────
+     00:00        午夜  wǔyè        (midnight)
+     01:00-05:59  凌晨  língchén    (early pre-dawn)
+     06:00-09:00  早上  zǎoshang    (morning, 09:00 inclusive)
+     09:01-11:59  上午  shàngwǔ     (late morning)
+     12:00-12:59  中午  zhōngwǔ     (noon)
+     13:00-16:59  下午  xiàwǔ       (afternoon)
+     17:00-18:59  傍晚  bàngwǎn     (dusk / early evening)
+     19:00-23:59  晚上  wǎnshang    (night)
+  ─────────────────────────────────────────────────────────── */
+ 
+  let prefix='', pinPfx='';
+  const totalMin = h * 60 + m;
+ 
+  if(totalMin === 0){
+    prefix='午夜'; pinPfx='wǔ yè';
+  } else if(h>=1 && h<=5){
+    prefix='凌晨'; pinPfx='líng chén';
+  } else if(h===6 || h===7 || h===8){
+    // 06:00–08:59 → 早上
+    prefix='早上'; pinPfx='zǎo shang';
+  } else if(h===9 || h===10 || h===11){
+    // 09:00–11:59 → 上午
+    prefix='上午'; pinPfx='shàng wǔ';
+  } else if(h===12){
+    prefix='中午'; pinPfx='zhōng wǔ';
+  } else if(h>=13 && h<=16){
+    prefix='下午'; pinPfx='xià wǔ';
+  } else if(h===17 || h===18){
+    prefix='傍晚'; pinPfx='bàng wǎn';
+  } else {
+    prefix='晚上'; pinPfx='wǎn shang';
+  }
+ 
+  /* 12-hour numeral; 两 replaces 二 for "2 o'clock" */
+  const hh12 = h % 12 || 12;
+  const hText = hh12 === 2 ? '两' : chineseNumber(hh12);
+  const hPin  = hh12 === 2 ? 'liǎng' : chinesePinyin(hh12);
+ 
+  /* Minutes: 零X for single-digit, 整 for on-the-hour.
+     Exception: 中午十二点 omits 整 — standard Mandarin usage. */
+  let mText='', mPin='';
+  if(m===0 && prefix==='中午'){
+    mText=''; mPin='';          // "中午十二点" — no 整
+  } else if(m===0){
+    mText='整'; mPin='zhěng';
+  } else if(m<10){
+    mText='零'+chineseNumber(m)+'分';
+    mPin ='líng '+chinesePinyin(m)+' fēn';
+  } else {
+    mText=chineseNumber(m)+'分';
+    mPin =chinesePinyin(m)+' fēn';
+  }
+ 
+  const text   = `${prefix}${hText}点${mText}`;
+  const pinyin = `${pinPfx} ${hPin} diǎn ${mPin}`;
+ 
+  return {text, pinyin};
+}
+ 
+/* SLIDER */
+ 
+slider.addEventListener('input',()=>{
+ 
+  const val=parseInt(slider.value);
+ 
+  H=Math.floor(val/60);
+  M=val%60;
+ 
+  if(quizMode){
+    revealQuiz();
+  }
+ 
+  render();
+});
+ 
+/* DRAG */
+ 
+function getAngle(x,y){
+ 
+  const rect=document.getElementById('clockFace')
+  .getBoundingClientRect();
+ 
+  const dx=x-(rect.left+rect.width/2);
+  const dy=y-(rect.top+rect.height/2);
+ 
+  return (Math.atan2(dy,dx)*180/Math.PI+90+360)%360;
+}
+ 
+hourHand.addEventListener('mousedown',()=>{
+  dragging='hour';
+});
+ 
+minuteHand.addEventListener('mousedown',()=>{
+  dragging='minute';
+});
+ 
+window.addEventListener('mouseup',()=>{
+  dragging=null;
+});
+ 
+window.addEventListener('mousemove',(e)=>{
+ 
+  if(!dragging) return;
+ 
+  const angle=getAngle(e.clientX,e.clientY);
+ 
+  if(dragging==='minute'){
+ 
+    M=Math.round(angle/6)%60;
+ 
+  }else{
+ 
+    const total=angle/30;
+ 
+    H=Math.floor(total)%12 + (H>=12?12:0);
+    M=Math.round((total%1)*60)%60;
+  }
+ 
+  if(quizMode){
+    revealQuiz();
+  }
+ 
+  render();
+});
+ 
+/* QUIZ */
+ 
+function randomQuiz(){
+ 
+  H=Math.floor(Math.random()*24);
+ 
+  const arr=[0,5,10,15,20,25,30,35,40,45,50,55];
+  M=arr[Math.floor(Math.random()*arr.length)];
+ 
+  cards.forEach(c=>c.classList.add('hidden-answer'));
+ 
+  quizMode=true;
+ 
+  render();
+}
+ 
+function revealQuiz(){
+ 
+  cards.forEach(c=>c.classList.remove('hidden-answer'));
+ 
+  quizMode=false;
+}
+ 
+function resetClock(){
+ 
+  H=12;
+  M=0;
+ 
+  revealQuiz();
+ 
+  render();
+}
+ 
+/* =========================
+   AMBIENT GENERATOR
+========================= */
+ 
+(function(){
+ 
+  const layer=document.getElementById('ambient');
+ 
+  /* STARS */
+ 
+  for(let i=0;i<90;i++){
+ 
+    const s=document.createElement('div');
+ 
+    s.className='star';
+ 
+    const size=Math.random()*3+1;
+ 
+    s.style.width=size+'px';
+    s.style.height=size+'px';
+ 
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*80+'%';
+ 
+    s.style.animationDelay=Math.random()*3+'s';
+    s.style.animationDuration=(1.5+Math.random()*3)+'s';
+ 
+    layer.appendChild(s);
+  }
+ 
+  /* CLOUDS */
+ 
+  const cloudData=[
+    {w:180,h:58,t:8,d:42},
+    {w:120,h:42,t:22,d:55},
+    {w:220,h:65,t:14,d:70},
+    {w:160,h:50,t:30,d:60}
+  ];
+ 
+  cloudData.forEach(c=>{
+ 
+    const cl=document.createElement('div');
+ 
+    cl.className='cloud';
+ 
+    cl.style.width=c.w+'px';
+    cl.style.height=c.h+'px';
+ 
+    cl.style.top=c.t+'%';
+ 
+    cl.style.animationDuration=c.d+'s';
+ 
+    cl.style.left='-250px';
+ 
+    layer.appendChild(cl);
+ 
+  });
+ 
+})();
+ 
+/* INIT */
+ 
+render();
+</script>
+ 
+</body>
+</html>
+
+
